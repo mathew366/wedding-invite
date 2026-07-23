@@ -24,6 +24,7 @@
   @keyframes spinDots { to { transform: rotate(360deg); } }
   @keyframes gentleFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
   @keyframes checkPop { 0% { transform: scale(0); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+  @media (max-width: 640px) { .petal:nth-child(even) { display: none; } }
 </style>
 </helmet>
 
@@ -33,7 +34,7 @@
 
   <div style="position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden">
     <sc-for list="{{ petals }}" as="p" hint-placeholder-count="12">
-      <div style="position:absolute;top:0;left:{{ p.left }}%;width:{{ p.size }}px;height:{{ p.size }}px;border-radius:50%;background:oklch(78% 0.07 25 / 0.55);animation:floatPetal {{ p.duration }}s linear {{ p.delay }}s infinite"></div>
+      <div class="petal" style="position:absolute;top:0;left:{{ p.left }}%;width:{{ p.size }}px;height:{{ p.size }}px;border-radius:50%;background:oklch(78% 0.07 25 / 0.55);animation:floatPetal {{ p.duration }}s linear {{ p.delay }}s infinite"></div>
     </sc-for>
   </div>
 
@@ -41,7 +42,7 @@
     <source src="assets/audio/song.mp3.mp3" type="audio/mp3"></source>
   </audio>
 
-  <button onClick="{{ toggleMusic }}" style="position:fixed;bottom:28px;right:28px;width:56px;height:56px;border-radius:50%;border:1px solid oklch(74% 0.13 82 / 0.5);background:oklch(98.5% 0.006 85 / 0.9);backdrop-filter:blur(8px);z-index:150;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.05em;color:oklch(45% 0.09 75);box-shadow:0 8px 24px oklch(30% 0.02 60 / 0.15);animation:gentleFloat 4s ease-in-out infinite">{{ musicLabel }}</button>
+  <button onClick="{{ toggleMusic }}" style="position:fixed;bottom:28px;right:28px;width:56px;height:56px;border-radius:50%;border:1px solid oklch(74% 0.13 82 / 0.5);background:oklch(98.5% 0.006 85 / 0.97);z-index:150;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.05em;color:oklch(45% 0.09 75);box-shadow:0 8px 24px oklch(30% 0.02 60 / 0.15);animation:gentleFloat 4s ease-in-out infinite">{{ musicLabel }}</button>
 
   <!-- OPENING SCREEN -->
   <section style="position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:oklch(97.5% 0.012 85);transition:opacity 0.9s ease,visibility 0.9s ease;opacity:{{ openingOpacity }};visibility:{{ openingVisibility }};pointer-events:{{ openingPointer }}">
@@ -302,10 +303,16 @@ class Component extends DCLogic {
   componentDidMount() {
     this.updateCountdown();
     this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
+    this._scrollTicking = false;
     this.onScroll = () => {
-      const el = document.documentElement;
-      const max = el.scrollHeight - el.clientHeight;
-      this.setState({ scrollPct: max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 0 });
+      if (this._scrollTicking) return;
+      this._scrollTicking = true;
+      requestAnimationFrame(() => {
+        this._scrollTicking = false;
+        const el = document.documentElement;
+        const max = el.scrollHeight - el.clientHeight;
+        this.setState({ scrollPct: max > 0 ? Math.min(100, (el.scrollTop / max) * 100) : 0 });
+      });
     };
     window.addEventListener('scroll', this.onScroll, { passive: true });
     this.observer = new IntersectionObserver((entries) => {
